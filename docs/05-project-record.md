@@ -12,8 +12,10 @@
 |---|---|
 | 项目名 | GateLink 活码台 |
 | 定位 | 面向校园团长、本地商家、渠道代理的活码工具：一个码挂多张二维码，按策略轮换展示，统计每条渠道的访问效果 |
-| 当前版本 | v1.2（首版完成三轮开发与验收） |
+| 当前版本 | v1.3（首版完成三轮开发与验收） |
 | 代码规模 | 小程序 6 个页面，后端 22 个源文件，21 个 REST 接口 + 2 个 H5 页面路由 |
+| AppID 环境 | 正式 AppID 配置在本地 `project.private.config.json`（已 gitignore），仓库内 `project.config.json` 为 `touristappid` 占位。**AppID 与 AppSecret 均不写入本档案、不入库** |
+| 项目根目录 | 仓库根目录（`project.config.json` 的 `miniprogramRoot` = `miniprogram/`），开发者工具直接打开根目录即可 |
 | 许可证 | MIT |
 
 ## 二、技术栈
@@ -108,3 +110,8 @@
   - 新增分享链接关闭入口、空数据友好提示
   - 接口数 19 → 21（新增子码图片替换、分享列表查询），测试 77 → 82 项全通过
 - 2026-10-27 v1.2：第三轮验收完成，输出验收报告与待补清单
+- 2026-10-27 v1.3：工程化修正
+  - 修复开发者工具从仓库根目录打开报「未找到 app.json」：`project.config.json` 上移到根目录并加 `miniprogramRoot: "miniprogram/"`，删除 `miniprogram/` 内重复的配置
+  - AppID 改为写入 `project.private.config.json`（官方支持、优先级高于主配置），该文件加入 `.gitignore`，仓库内保留 `touristappid` 占位
+  - `utils/config.js` 改为按 `envVersion` 自动切换接口地址（开发者工具→本地、体验版/正式版→线上），提供 `FORCE` 常量强制指定
+  - 主配置 `urlCheck: true`（生产安全），本地私有配置 `urlCheck: false`（免配合法域名即可联调）

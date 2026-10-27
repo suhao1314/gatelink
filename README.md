@@ -85,6 +85,8 @@ GateLink 的做法：对外只印**一个固定不变的码**，码的内容是�
 
 ```
 gatelink/
+├── project.config.json       项目配置（miniprogramRoot 指向 miniprogram/）
+├── project.private.config.json  本地配置：AppID 与个人设置，不入库
 ├── miniprogram/              微信小程序（原生，无第三方库）
 │   ├── pages/                6 个页面：index / editor / stats / profile / landing / share
 │   ├── utils/                请求、鉴权、配置
@@ -112,11 +114,16 @@ npm start     # 默认 http://127.0.0.1:8787
 
 ### 小程序
 
-用微信开发者工具打开 `miniprogram` 目录：
+**用微信开发者工具打开仓库根目录（不是 `miniprogram` 子目录）。**
 
-1. 「详情 - 本地设置」勾选 **不校验合法域名**
-2. 把 `miniprogram/utils/config.js` 的 `USE_DEV_SERVER` 改为 `true`，指向本地后端
-3. 编译预览
+根目录的 `project.config.json` 里写了 `"miniprogramRoot": "miniprogram/"`，工具会据此去子目录找 `app.json`。直接打开 `miniprogram/` 反而会因为找不到项目配置而报错。
+
+首次打开要做两件事：
+
+1. **换 AppID**：仓库里是 `touristappid` 占位。在「详情 - 基本信息 - AppID」填你自己的，工具会写进 `project.private.config.json`（该文件已 gitignore，不会污染仓库）。
+2. **启动后端**：先跑上面的 `npm start`。
+
+接口地址会自动跟随环境：开发者工具里连本地 `127.0.0.1:8787`，正式版和体验版连 `PROD_BASE`。要强制指定时改 `miniprogram/utils/config.js` 的 `FORCE` 常量（`'auto'` / `'dev'` / `'prod'`）。
 
 ## 配置
 

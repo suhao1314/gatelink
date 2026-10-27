@@ -21,6 +21,9 @@ dist/
 *.log
 npm-debug.log*
 
+# 微信开发者工具本地配置（含个人 AppID 与本地设置，官方建议不入库）
+project.private.config.json
+
 # 编辑器与系统
 .vscode/
 .idea/
