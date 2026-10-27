@@ -1,0 +1,47 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/stats/stats",
+    "pages/profile/profile",
+    "pages/landing/landing",
+    "pages/editor/editor",
+    "pages/share/share"
+  ],
+  "window": {
+    "backgroundColor": "#F5F5F7",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "活码台",
+    "navigationBarTextStyle": "black",
+    "enablePullDownRefresh": false
+  },
+  "tabBar": {
+    "color": "#8E8E93",
+    "selectedColor": "#007AFF",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "活码",
+        "iconPath": "assets/icons/tabbar-home.png",
+        "selectedIconPath": "assets/icons/tabbar-home-active.png"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "数据",
+        "iconPath": "assets/icons/tabbar-chart.png",
+        "selectedIconPath": "assets/icons/tabbar-chart-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/icons/tabbar-user.png",
+        "selectedIconPath": "assets/icons/tabbar-user-active.png"
+      }
+    ]
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

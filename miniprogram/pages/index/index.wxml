@@ -1,0 +1,55 @@
+<view class="page">
+
+  <view wx:if="{{loading}}" class="list-wrap">
+    <view class="card" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="sk sk-line" style="width:220rpx"></view>
+      <view class="sk sk-line sk-thin" style="width:320rpx"></view>
+      <view class="sk-actions">
+        <view class="sk sk-btn"></view>
+        <view class="sk sk-btn"></view>
+      </view>
+    </view>
+  </view>
+
+  <block wx:elif="{{items.length}}">
+    <view class="list-wrap">
+      <view class="card" wx:for="{{items}}" wx:key="id" bindtap="onEdit" data-id="{{item.id}}">
+        <view class="card-head">
+          <view class="name">{{item.name}}</view>
+          <view class="tag {{item.status === 'active' ? 'tag-green' : 'tag-gray'}}">{{item.status === 'active' ? '启用' : '暂停'}}</view>
+          <view class="more" catchtap="onMore" data-id="{{item.id}}">
+            <image class="more-icon" src="/assets/icons/icon-drag.png" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="meta small">{{item.channelCount}} 个子码 · 今日 {{item.today.visits}} 次访问</view>
+        <view wx:if="{{item.alert}}" class="alert-row {{item.alert.level === 'danger' ? 'alert-danger' : 'alert-warn'}}">
+          <image class="alert-icon" src="/assets/icons/icon-warning.png" mode="aspectFit" />
+          <text class="alert-text">{{item.alert.text}}</text>
+        </view>
+        <view class="actions">
+          <view class="mini-btn mini-primary" catchtap="onViewStats" data-id="{{item.id}}">看数据</view>
+          <view class="mini-btn mini-outline" catchtap="onEdit" data-id="{{item.id}}">编辑</view>
+        </view>
+      </view>
+    </view>
+    <view class="hint tiny center">下拉可以刷新列表</view>
+  </block>
+
+  <view wx:elif="{{emptyError}}" class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">{{emptyError}}</view>
+    <view class="btn-tertiary" bindtap="onRetry">重试</view>
+  </view>
+
+  <view wx:else class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">还没有活码</view>
+    <view class="empty-desc">创建一个活码，把多张二维码放进去轮换展示\n再生成一张长期有效的对外二维码</view>
+    <view class="empty-btn" bindtap="onCreate">创建第一个活码</view>
+  </view>
+
+  <view wx:if="{{!loading && items.length}}" class="fab" bindtap="onCreate">
+    <image class="fab-icon" src="/assets/icons/icon-plus.png" mode="aspectFit" />
+  </view>
+
+</view>

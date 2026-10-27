@@ -1,0 +1,126 @@
+.list-wrap { padding: 8rpx 0 40rpx; }
+
+.card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  margin: 16rpx 32rpx;
+  padding: 32rpx;
+}
+
+.card:active { opacity: 0.6; }
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.name {
+  flex: 1;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.more-icon {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.45;
+}
+
+.meta {
+  margin-top: 12rpx;
+  color: #6E6E73;
+}
+
+.alert-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 16rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+}
+
+.alert-icon { width: 26rpx; height: 26rpx; flex-shrink: 0; }
+
+.alert-warn { background: #FAEEDA; color: #854F0B; }
+.alert-danger { background: #FCEBEB; color: #A32D2D; }
+
+.actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.mini-btn {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+}
+
+.mini-primary { background: #007AFF; color: #FFFFFF; }
+.mini-outline { border: 2rpx solid #007AFF; color: #007AFF; line-height: 68rpx; }
+
+.sk-line { height: 36rpx; margin-bottom: 16rpx; }
+.sk-thin { height: 26rpx; width: 300rpx; }
+
+.sk-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.sk-btn { flex: 1; height: 72rpx; border-radius: 12rpx; }
+
+.hint {
+  padding: 24rpx 0 40rpx;
+  color: #8E8E93;
+}
+
+.empty-btn {
+  background: #007AFF;
+  color: #FFFFFF;
+  border-radius: 16rpx;
+  font-size: 32rpx;
+  padding: 0 48rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+}
+
+.fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: calc(56rpx + env(safe-area-inset-bottom));
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 52rpx;
+  background: #007AFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 122, 255, 0.28);
+  z-index: 30;
+}
+
+.fab:active { opacity: 0.6; }
+
+.fab-icon {
+  width: 44rpx;
+  height: 44rpx;
+}

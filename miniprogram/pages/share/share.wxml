@@ -1,0 +1,81 @@
+<view class="page">
+
+  <view wx:if="{{loading}}" class="pad">
+    <view class="sk sk-line" style="width:220rpx"></view>
+    <view class="sk sk-big"></view>
+    <view class="sk sk-big"></view>
+  </view>
+
+  <view wx:elif="{{error}}" class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">{{error}}</view>
+    <view class="btn-tertiary" bindtap="onRetry">重试</view>
+  </view>
+
+  <block wx:else>
+    <view class="head">
+      <view class="head-title">{{info.campaign.name}}</view>
+      <view class="head-sub tiny">{{stats.range.label}} · 数据由 GateLink 统计</view>
+    </view>
+
+    <view class="stat-grid">
+      <view class="stat-card">
+        <view class="stat-num">{{stats.overview.visits}}</view>
+        <view class="stat-lab">访问次数</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-num">{{stats.overview.uniques}}</view>
+        <view class="stat-lab">独立访客</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">访问趋势</view>
+      <view class="chart">
+        <view wx:for="{{stats.trend}}" wx:key="day" class="chart-col">
+          <view class="chart-bar-wrap">
+            <view class="chart-bar" style="height:{{item.h}}%"></view>
+          </view>
+          <view class="chart-lab">{{item.label}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{stats.hasSources}}" class="card">
+      <view class="card-title">来源分布</view>
+      <view wx:for="{{stats.sources}}" wx:key="key" class="bar-row">
+        <view class="bar-row-top">
+          <text class="bar-name">{{item.label}}</text>
+          <text class="bar-val tiny muted">{{item.visits}} 次 · {{item.pct}}%</text>
+        </view>
+        <view class="bar-track">
+          <view class="bar-fill" style="width:{{item.w}}%"></view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{stats.hasChannels}}" class="card">
+      <view class="card-title">子码展示占比</view>
+      <view wx:for="{{stats.channels}}" wx:key="id" class="bar-row">
+        <view class="bar-row-top">
+          <text class="bar-name">{{item.name}}</text>
+          <text class="bar-val tiny muted">{{item.views}} 次 · {{item.pct}}%</text>
+        </view>
+        <view class="bar-track">
+          <view class="bar-fill bar-fill-2" style="width:{{item.w}}%"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">这个活码的地址</view>
+      <view class="tiny muted link-text">{{info.campaign.landingUrl}}</view>
+      <view class="btn-secondary" bindtap="onCopy">复制地址</view>
+    </view>
+
+    <view class="note tiny center">统计的是扫码打开页面的次数，不代表最终添加好友或进群的人数</view>
+
+    <view class="spacer-h"></view>
+  </block>
+
+</view>

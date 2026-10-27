@@ -1,0 +1,55 @@
+<view class="page landing">
+
+  <view wx:if="{{loading}}" class="wrap">
+    <view class="card">
+      <view class="cover-sk sk"></view>
+      <view class="line-sk sk" style="width:180rpx"></view>
+      <view class="line-sk sk" style="width:280rpx"></view>
+      <view class="qr-sk sk"></view>
+      <view class="line-sk sk" style="width:240rpx"></view>
+    </view>
+  </view>
+
+  <block wx:elif="{{status === 'ok' || status === 'paused'}}">
+    <view class="wrap">
+      <view class="card">
+        <image wx:if="{{coverUrl}}" class="cover" src="{{coverUrl}}" mode="widthFix" lazy-load="{{true}}" />
+        <view wx:if="{{headline}}" class="headline">{{headline}}</view>
+        <view wx:if="{{subtitle}}" class="subtitle">{{subtitle}}</view>
+
+        <view wx:if="{{channel}}" class="qr-box" bindtap="onPreview">
+          <image class="qr" src="{{channel.imageUrl}}" mode="widthFix" show-menu-by-longpress="{{true}}" />
+        </view>
+        <view wx:else class="qr-box qr-box-empty">
+          <image class="illustration" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+          <view class="small muted">暂时没有可用的二维码</view>
+        </view>
+
+        <view wx:if="{{hintText}}" class="hint" style="color:{{themeColor}}">{{hintText}}</view>
+        <view wx:if="{{bodyText}}" class="body">{{bodyText}}</view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:elif="{{status === 'empty'}}">
+    <view class="wrap">
+      <view class="card">
+        <image wx:if="{{coverUrl}}" class="cover" src="{{coverUrl}}" mode="widthFix" lazy-load="{{true}}" />
+        <view wx:if="{{headline}}" class="headline">{{headline}}</view>
+        <view wx:if="{{subtitle}}" class="subtitle">{{subtitle}}</view>
+        <view class="qr-box qr-box-empty">
+          <image class="illustration" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+          <view class="small muted">暂时无法为您提供二维码</view>
+        </view>
+        <view wx:if="{{hintText}}" class="hint">{{hintText}}</view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:else class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">{{errorMsg || '这个入口已经失效了'}}</view>
+    <view wx:if="{{status === 'error'}}" class="btn-tertiary" bindtap="onReload">重新加载</view>
+  </view>
+
+</view>

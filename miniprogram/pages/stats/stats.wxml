@@ -1,0 +1,147 @@
+<view class="page">
+
+  <view wx:if="{{loading && !stats}}" class="pad">
+    <view class="sk sk-line" style="width:200rpx"></view>
+    <view class="sk sk-big"></view>
+    <view class="sk sk-big"></view>
+  </view>
+
+  <view wx:elif="{{!campaigns.length}}" class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">还没有可以查看的数据</view>
+    <view class="empty-desc">先去创建一个活码，投放之后这里就会有访问统计</view>
+    <view class="empty-btn" bindtap="onCreate">去创建</view>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">{{loadError}}</view>
+    <view class="btn-tertiary" bindtap="onRetry">重试</view>
+  </view>
+
+  <block wx:else>
+
+    <view class="pick-wrap">
+      <picker mode="selector" range="{{campaignNames}}" value="{{campaignIndex}}" bindchange="onPickCampaign">
+        <view class="pick">
+          <text class="pick-name">{{campaignNames[campaignIndex]}}</text>
+          <image class="pick-arrow" src="/assets/icons/icon-chevron-right.png" mode="aspectFit" />
+        </view>
+      </picker>
+    </view>
+
+    <view class="seg-wrap">
+      <view class="seg">
+        <view wx:for="{{rangeLabels}}" wx:key="*this" class="seg-item {{range === (index === 0 ? 'today' : (index === 1 ? '7d' : '30d')) ? 'seg-on' : ''}}" data-index="{{index}}" bindtap="onRange">{{item}}</view>
+      </view>
+    </view>
+
+    <block wx:if="{{stats}}">
+      <view class="stat-grid">
+        <view class="stat-card">
+          <view class="stat-num">{{overview.visits}}</view>
+          <view class="stat-lab">访问次数</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-num">{{overview.uniques}}</view>
+          <view class="stat-lab">独立访客</view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">今日对比昨日</view>
+        <view class="delta-row">
+          <text class="delta-num">{{overview.today}}</text>
+          <text class="delta-hint">昨日 {{overview.yesterday}}</text>
+          <text class="delta-pct {{overview.deltaPct >= 0 ? 'up' : 'down'}}">{{overview.deltaPct >= 0 ? '+' : ''}}{{overview.deltaPct}}%</text>
+        </view>
+      </view>
+
+      <block wx:if="{{hasData}}">
+      <view class="card">
+        <view class="card-title">访问趋势</view>
+        <view class="chart">
+          <view wx:for="{{stats.trend}}" wx:key="day" class="chart-col">
+            <view class="chart-bar-wrap">
+              <view class="chart-bar" style="height:{{item.h}}%"></view>
+            </view>
+            <view class="chart-lab">{{item.label}}</view>
+          </view>
+        </view>
+        <view class="chart-sum tiny muted-2">日均 {{overview.avgPerDay}} 次</view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">时段分布</view>
+        <view class="hours">
+          <view wx:for="{{stats.hourly}}" wx:key="hour" class="hour-col">
+            <view class="hour-bar" style="height:{{item.h}}%"></view>
+          </view>
+        </view>
+        <view class="hour-legend tiny muted-2">
+          <text>0 点</text><text>12 点</text><text>23 点</text>
+        </view>
+      </view>
+
+      <view wx:if="{{stats.hasSources}}" class="card">
+        <view class="card-title">来源分布</view>
+        <view wx:for="{{stats.sources}}" wx:key="key" class="bar-row">
+          <view class="bar-row-top">
+            <text class="bar-name">{{item.label}}</text>
+            <text class="bar-val tiny muted">{{item.visits}} 次 · {{item.pct}}%</text>
+          </view>
+          <view class="bar-track">
+            <view class="bar-fill" style="width:{{item.w}}%"></view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{stats.hasChannels}}" class="card">
+        <view class="card-title">子码展示占比</view>
+        <view wx:for="{{stats.channels}}" wx:key="id" class="bar-row">
+          <view class="bar-row-top">
+            <text class="bar-name">{{item.name}}</text>
+            <text class="bar-val tiny muted">{{item.views}} 次 · {{item.pct}}%</text>
+          </view>
+          <view class="bar-track">
+            <view class="bar-fill bar-fill-2" style="width:{{item.w}}%"></view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{stats.os.length}}" class="card">
+        <view class="card-title">设备分布</view>
+        <view class="os-row">
+          <view wx:for="{{stats.os}}" wx:key="key" class="os-item">
+            <text class="os-name">{{item.label}}</text>
+            <text class="os-val tiny muted">{{item.pct}}%</text>
+          </view>
+        </view>
+      </view>
+
+      </block>
+
+      <view wx:else class="card">
+        <view class="card-title">还没有扫码记录</view>
+        <view class="tiny muted">把这个活码的二维码放到海报、传单或者朋友圈，有人扫码后这里就会出现数据。</view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">把这个看板分享给别人</view>
+        <view class="tiny muted share-desc">生成一条链接，对方不用登录也能看到这份数据，30 天后自动失效，可以随时关闭。</view>
+        <block wx:if="{{shareToken}}">
+          <view class="share-url tiny">{{shareUrl}}</view>
+          <view class="btn-secondary" bindtap="onViewShare">复制链接</view>
+          <view class="revoke-text" bindtap="onRevokeShare">关闭这个分享</view>
+        </block>
+        <view wx:else class="btn-secondary" bindtap="onShare">生成分享链接</view>
+      </view>
+
+      <view class="note tiny center">统计的是扫码打开页面的次数，不代表最终添加好友或进群的人数</view>
+
+      <view class="spacer-h"></view>
+    </block>
+
+  </block>
+
+</view>

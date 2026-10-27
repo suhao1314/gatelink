@@ -1,0 +1,139 @@
+.pad { padding: 32rpx; }
+.sk-line { height: 40rpx; margin-bottom: 24rpx; }
+.sk-big { height: 200rpx; margin-bottom: 24rpx; border-radius: 24rpx; }
+
+.head {
+  padding: 40rpx 32rpx 8rpx;
+}
+
+.head-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+  line-height: 1.3;
+}
+
+.head-sub {
+  color: #8E8E93;
+  margin-top: 10rpx;
+}
+
+.stat-grid {
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx 32rpx 8rpx;
+}
+
+.stat-card {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx 24rpx;
+}
+
+.stat-num {
+  font-size: 54rpx;
+  font-weight: 600;
+  line-height: 1.15;
+  color: #1D1D1F;
+}
+
+.stat-lab {
+  font-size: 24rpx;
+  color: #6E6E73;
+  margin-top: 8rpx;
+}
+
+.card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  margin: 16rpx 32rpx;
+  padding: 32rpx;
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+  margin-bottom: 28rpx;
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  height: 200rpx;
+  gap: 8rpx;
+}
+
+.chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.chart-bar-wrap {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: 60%;
+  background: #007AFF;
+  border-radius: 6rpx 6rpx 0 0;
+}
+
+.chart-lab {
+  font-size: 20rpx;
+  color: #8E8E93;
+  margin-top: 10rpx;
+  transform: scale(0.92);
+}
+
+.bar-row { margin-bottom: 28rpx; }
+.bar-row:last-child { margin-bottom: 0; }
+
+.bar-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12rpx;
+}
+
+.bar-name {
+  font-size: 28rpx;
+  color: #1D1D1F;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-val { flex-shrink: 0; }
+
+.bar-track {
+  height: 12rpx;
+  background: #F0F0F3;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.bar-fill { height: 100%; background: #007AFF; border-radius: 6rpx; }
+.bar-fill-2 { background: #34C759; }
+
+.link-text {
+  word-break: break-all;
+  margin-bottom: 28rpx;
+  line-height: 1.6;
+}
+
+.note {
+  padding: 32rpx 48rpx 0;
+  line-height: 1.6;
+  color: #8E8E93;
+}

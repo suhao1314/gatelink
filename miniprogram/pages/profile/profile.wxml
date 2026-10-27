@@ -1,0 +1,63 @@
+<view class="page">
+
+  <view wx:if="{{loading}}" class="pad">
+    <view class="sk sk-line" style="width:200rpx"></view>
+    <view class="sk sk-box"></view>
+  </view>
+
+  <view wx:elif="{{error}}" class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">{{error}}</view>
+    <view class="btn-tertiary" bindtap="onRetry">重试</view>
+  </view>
+
+  <block wx:else>
+    <view class="card-flush hero">
+      <image class="avatar" src="/assets/icons/icon-user.png" mode="aspectFit" />
+      <view class="hero-body">
+        <view class="hero-title">我的账号</view>
+        <view class="hero-sub tiny">{{userId}}</view>
+      </view>
+    </view>
+
+    <view class="card-flush">
+      <view class="row">
+        <image class="row-icon" src="/assets/icons/icon-qr.png" mode="aspectFit" />
+        <text class="row-title">已创建的活码</text>
+        <text class="row-value">{{campaignCount}} 个</text>
+      </view>
+    </view>
+
+    <view wx:if="{{devMode}}" class="card-flush">
+      <view class="row">
+        <image class="row-icon" src="/assets/icons/icon-warning.png" mode="aspectFit" />
+        <text class="row-title">当前为体验模式</text>
+      </view>
+      <view class="tip-text">还没有配置小程序的登录凭证，现在用的是临时账号。配置好之后会用真实的微信身份登录。</view>
+    </view>
+
+    <view class="section-title">关于数据</view>
+    <view class="card-flush">
+      <view class="row-row row-row-col">
+        <text class="row-row-label">统计口径</text>
+        <view class="tiny muted about-text">这里统计的是扫码后打开页面的次数，不是成功添加好友或进群的人数。系统不读取你的微信好友、聊天记录，也不要求访客授权。</view>
+      </view>
+    </view>
+
+    <view class="section-title">其他</view>
+    <view class="card-flush">
+      <view class="row row-hover" bindtap="onClearCache">
+        <image class="row-icon" src="/assets/icons/icon-refresh.png" mode="aspectFit" />
+        <text class="row-title">清除本地缓存</text>
+        <image class="row-arrow" src="/assets/icons/icon-chevron-right.png" mode="aspectFit" />
+      </view>
+      <view class="row row-hover btn-danger" bindtap="onLogout">
+        <image class="row-icon" src="/assets/icons/icon-close.png" mode="aspectFit" />
+        <text class="row-title btn-danger">退出登录</text>
+      </view>
+    </view>
+
+    <view class="spacer-h"></view>
+  </block>
+
+</view>

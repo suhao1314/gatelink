@@ -1,0 +1,17 @@
+{
+  "name": "gatelink-server",
+  "version": "1.0.0",
+  "description": "GateLink 活码台后端服务",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --experimental-sqlite src/index.js",
+    "dev": "node --experimental-sqlite --watch src/index.js",
+    "test": "node --experimental-sqlite tests/run.js",
+    "init-db": "node --experimental-sqlite src/init-db.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}

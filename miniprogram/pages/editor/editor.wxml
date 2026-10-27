@@ -1,0 +1,170 @@
+<view class="page editor">
+
+  <view wx:if="{{loading}}" class="pad">
+    <view class="sk sk-line" style="width:260rpx"></view>
+    <view class="sk sk-box"></view>
+    <view class="sk sk-box"></view>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="empty">
+    <image class="empty-img" src="/assets/icons/illustration-empty.png" mode="aspectFit" />
+    <view class="empty-title">{{loadError}}</view>
+    <view class="btn-tertiary" bindtap="loadDetail">重试</view>
+  </view>
+
+  <block wx:else>
+
+    <view class="seg-wrap">
+      <view class="seg">
+        <view class="seg-item {{tab === 'content' ? 'seg-on' : ''}}" data-tab="content" bindtap="onTab">页面内容</view>
+        <view class="seg-item {{tab === 'queue' ? 'seg-on' : ''}}" data-tab="queue" bindtap="onTab">二维码队列</view>
+      </view>
+    </view>
+
+    <block wx:if="{{tab === 'content'}}">
+      <view class="card-flush preview-row" bindtap="onPreviewLanding">
+        <image class="row-row-icon" src="/assets/icons/icon-eye.png" mode="aspectFit" />
+        <text class="row-row-blue">预览扫码后的效果</text>
+        <image class="row-arrow" src="/assets/icons/icon-chevron-right.png" mode="aspectFit" />
+      </view>
+
+      <view class="section-title">基本信息</view>
+      <view class="card-flush">
+        <view class="row-row">
+          <text class="row-row-label">活码名称</text>
+          <input class="row-row-input" value="{{form.name}}" data-key="name" bindinput="onInput" placeholder="比如 雁山拼车群" placeholder-class="input-placeholder" maxlength="40" />
+        </view>
+      </view>
+
+      <view class="section-title">扫码后看到的页面</view>
+      <view class="card-flush">
+        <view class="row-row">
+          <text class="row-row-label">导航栏标题</text>
+          <input class="row-row-input" value="{{form.pageTitle}}" data-key="pageTitle" bindinput="onInput" placeholder="显示在页面顶部" placeholder-class="input-placeholder" maxlength="30" />
+        </view>
+        <view class="row-row">
+          <text class="row-row-label">主标题</text>
+          <input class="row-row-input" value="{{form.headline}}" data-key="headline" bindinput="onInput" placeholder="比如 扫码进群" placeholder-class="input-placeholder" maxlength="40" />
+        </view>
+        <view class="row-row">
+          <text class="row-row-label">副标题</text>
+          <input class="row-row-input" value="{{form.subtitle}}" data-key="subtitle" bindinput="onInput" placeholder="一句话说明" placeholder-class="input-placeholder" maxlength="60" />
+        </view>
+        <view class="row-row">
+          <text class="row-row-label">二维码下方文字</text>
+          <input class="row-row-input" value="{{form.hintText}}" data-key="hintText" bindinput="onInput" placeholder="长按识别，添加咨询" placeholder-class="input-placeholder" maxlength="40" />
+        </view>
+      </view>
+
+      <view class="card-flush">
+        <view class="row-row row-row-col">
+          <text class="row-row-label">补充说明</text>
+          <textarea class="row-row-area" value="{{form.bodyText}}" data-key="bodyText" bindinput="onInput" placeholder="可以写服务时间、注意事项等，不填就不显示" placeholder-class="input-placeholder" maxlength="500" auto-height />
+          <view class="counter">{{form.bodyText.length || 0}}/500</view>
+        </view>
+      </view>
+
+      <view class="section-title">顶部封面（可选）</view>
+      <view class="card-flush">
+        <view wx:if="{{coverUrl}}" class="cover-box">
+          <image class="cover-img" src="{{coverUrl}}" mode="widthFix" />
+        </view>
+        <view class="row-row row-row-tap" bindtap="onUploadCover">
+          <image class="row-row-icon" src="/assets/icons/icon-camera.png" mode="aspectFit" />
+          <text class="row-row-blue">{{coverUrl ? '更换封面图' : '上传封面图'}}</text>
+        </view>
+      </view>
+
+      <view class="section-title">主题色</view>
+      <view class="card-flush">
+        <view class="theme-list">
+          <view wx:for="{{themes}}" wx:key="*this" class="theme-dot {{form.themeColor === item ? 'theme-on' : ''}}" style="background:{{item}}" data-color="{{item}}" bindtap="onTheme"></view>
+        </view>
+      </view>
+
+      <view class="section-title">分配方式</view>
+      <view class="card-flush">
+        <picker mode="selector" range="{{strategies}}" value="{{strategyIndex}}" bindchange="onStrategy">
+          <view class="row-row row-row-tap">
+            <text class="row-row-label">选择方式</text>
+            <text class="row-row-value">{{strategyLabel}}</text>
+            <image class="row-arrow" src="/assets/icons/icon-chevron-right.png" mode="aspectFit" />
+          </view>
+        </picker>
+      </view>
+      <view class="tip-text">依次轮流：按顺序一张张展示。随机分配：每次随机挑一张。按名额分配：先满第一张的名额，再轮到下一张。</view>
+
+      <view class="section-title">状态</view>
+      <view class="card-flush">
+        <view class="row-row">
+          <text class="row-row-label">对外启用</text>
+          <switch checked="{{form.status === 'active'}}" color="#007AFF" data-key="status" bindchange="onStatusSwitch" />
+        </view>
+      </view>
+      <view class="tip-text">停用后扫码会看到暂停提示，之前生成的二维码不用更换。</view>
+
+      <view class="spacer-h"></view>
+    </block>
+
+    <block wx:else>
+      <view class="section-title">已添加的二维码 · {{channels.length}} 张</view>
+
+      <view wx:if="{{channels.length}}" class="card-flush">
+        <view wx:for="{{channels}}" wx:key="id" class="ch-row" data-index="{{index}}" bindtap="onChannelTap">
+          <image class="ch-thumb" src="{{item.imageUrl}}" mode="aspectFill" />
+          <view class="ch-body">
+            <view class="ch-name">
+              <text>{{item.name}}</text>
+              <view wx:if="{{fallbackId === item.id}}" class="tag tag-blue ch-tag">兜底</view>
+            </view>
+            <view class="ch-meta small">
+              <text wx:if="{{item.status !== 'active'}}" class="tag tag-gray">已停用</text>
+              <text wx:if="{{item.status === 'active'}}" class="tag tag-green">启用中</text>
+              <text class="muted-2">已展示 {{item.displayCount}} 次</text>
+            </view>
+            <view class="ch-meta tiny muted-2" wx:if="{{item.quota > 0}}">名额 {{item.servedCount}}/{{item.quota}}</view>
+            <view class="ch-meta tiny muted-2" wx:if="{{item.expireText}}">{{item.expireText}}</view>
+          </view>
+          <image class="row-arrow" src="/assets/icons/icon-chevron-right.png" mode="aspectFit" />
+        </view>
+      </view>
+
+      <view wx:else class="empty small-box">
+        <image class="empty-img-sm" src="/assets/icons/icon-qr.png" mode="aspectFit" />
+        <view class="empty-title">队列还是空的</view>
+        <view class="empty-desc">添加至少一张二维码，扫码的人才看得到内容</view>
+      </view>
+
+      <view class="card-flush add-row" bindtap="onAddChannel">
+        <image class="row-row-icon" src="/assets/icons/icon-plus.png" mode="aspectFit" />
+        <text class="row-row-blue">添加二维码</text>
+      </view>
+
+      <view class="tip-text">点任意一张可以停用、设为兜底、设置名额、换图、调顺序或删除。设为兜底的那张，会在其他图片都不可用时自动顶上。</view>
+
+      <view class="spacer-h"></view>
+    </block>
+
+  </block>
+
+  <view wx:if="{{!loading && !loadError}}" class="footer-bar">
+    <view class="btn-secondary" bindtap="onSave">保存</view>
+    <view class="btn-primary" bindtap="onOpenQr">获取二维码</view>
+  </view>
+
+  <view wx:if="{{qrVisible}}" class="mask" bindtap="onCloseQr">
+    <view class="qr-sheet" catchtap="noop">
+      <view class="qr-title">{{form.name}}</view>
+      <image wx:if="{{qrPath}}" class="qr-big" src="{{qrPath}}" mode="widthFix" show-menu-by-longpress="{{true}}" />
+      <view wx:else class="qr-big qr-big-empty"><view class="sk" style="width:100%;height:100%"></view></view>
+      <view class="tiny muted center qr-note">这张码长期有效，内容可以在后台随时更换</view>
+      <view class="qr-actions">
+        <view class="btn-secondary btn-flex" bindtap="onSaveQr">保存到相册</view>
+        <view class="btn-primary btn-flex" bindtap="onPreviewQr">放大查看</view>
+      </view>
+      <view class="tiny center qr-close" bindtap="onCloseQr">关闭</view>
+      <view class="nav-safe"></view>
+    </view>
+  </view>
+
+</view>
