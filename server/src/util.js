@@ -4,6 +4,17 @@ const crypto = require('crypto');
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
+function safeLogTarget(raw) {
+  // Route templates only: unknown/malformed paths and all query strings are omitted.
+  try {
+    const pathname = new URL(raw, 'http://localhost').pathname;
+    if (/^\/api\/(health|me|campaigns|auth\/login)$/.test(pathname)) return pathname;
+    if (/^\/(s|c)\//.test(pathname)) return '/' + pathname.split('/')[1] + '/[redacted]';
+    if (pathname.startsWith('/api/')) return '/api/[redacted]';
+    return '/[redacted]';
+  } catch (_) { return '/[invalid]'; }
+}
+
 function randomStr(n) {
   const b = crypto.randomBytes(n);
   let out = '';
@@ -133,7 +144,7 @@ function daysAgoTs(days) {
 }
 
 module.exports = {
-  uid, randomStr, nowSec, dayStr, hourOf, sha256, visitorHash,
+  safeLogTarget, uid, randomStr, nowSec, dayStr, hourOf, sha256, visitorHash,
   toInt, toIntClamped, clampStr, stripControl, isHexColor, pickText,
   base64url, hmacSign, safeEqual, parseJsonBody, mapFields, daysAgoTs,
 };

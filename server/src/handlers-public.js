@@ -3,6 +3,7 @@
 const { getDb } = require('./db');
 const http = require('./http');
 const { staticUrl, publicCampaign, pickChannel, resolveFallback, recordVisit, channelPublic, buildLandingPayload } = require('./landing');
+const { validShareToken, usableShare } = require('./share-policy');
 const { buildStats } = require('./stats');
 const { config } = require('./config');
 const { nowSec, pickText } = require('./util');
@@ -138,9 +139,9 @@ function handleLandingPage(req, res, params, query) {
 }
 
 function handleShareApi(req, res, params) {
-  const row = db().prepare('SELECT * FROM share_links WHERE token = ? AND enabled = 1').get(params.token);
+  const row = validShareToken(params.token) ? db().prepare('SELECT * FROM share_links WHERE token = ? AND enabled = 1').get(params.token) : null;
   if (!row) return http.fail(res, 404, '分享内容不存在或已关闭', 'SHARE_NOT_FOUND');
-  if (row.expires_at && row.expires_at < nowSec()) {
+  if (!usableShare(row, nowSec())) {
     return http.fail(res, 410, '分享链接已过期', 'SHARE_EXPIRED');
   }
   const c = db().prepare('SELECT * FROM campaigns WHERE id = ? AND deleted = 0').get(row.campaign_id);
@@ -164,8 +165,8 @@ function handleShareApi(req, res, params) {
 }
 
 function handleSharePage(req, res, params, query) {
-  const row = db().prepare('SELECT * FROM share_links WHERE token = ? AND enabled = 1').get(params.token);
-  if (!row) {
+  const row = validShareToken(params.token) ? db().prepare('SELECT * FROM share_links WHERE token = ? AND enabled = 1').get(params.token) : null;
+  if (!usableShare(row, nowSec())) {
     http.sendHtml(res, '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>已失效</title><style>body{font-family:-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;color:#6E6E73;font-size:15px;background:#F5F5F7}</style></head><body>分享内容不存在或已关闭</body></html>', 404);
     return;
   }
@@ -225,7 +226,7 @@ li .v{color:#6E6E73}
 <div class="stat"><div class="num">${s.overview.uniques}</div><div class="lab">独立访客</div></div>
 </div>
 <div class="card"><h2>访问趋势</h2><div class="chart">${bars}</div></div>
-<div class="card"><h2>来源分布</h2><ul>${rows}</ul></div>
+${row.scope === 'full' ? `<div class="card"><h2>来源分布</h2><ul>${rows}</ul></div>` : ''}
 <div class="foot">统计的是页面访问次数，不代表最终添加或进群的人数</div>
 </div>
 </body>

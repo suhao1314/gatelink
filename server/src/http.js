@@ -4,11 +4,18 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('./config');
 
+function isOriginAllowed(origin) {
+  return origin === undefined || (typeof origin === 'string' &&
+    (config.allowedOrigins === '*' || config.allowedOrigins.split(',').map(s => s.trim()).includes(origin)));
+}
+
 function setCors(res) {
-  if (config.allowedOrigins === '*') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', config.allowedOrigins);
+  const origin = res.req && res.req.headers.origin;
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Vary', 'Origin');
+  if (origin !== undefined && isOriginAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', config.allowedOrigins === '*' ? '*' : origin);
   }
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
@@ -18,6 +25,7 @@ function sendJson(res, status, payload, headers) {
   const body = JSON.stringify(payload);
   setCors(res);
   res.writeHead(status, Object.assign({
+    'Cache-Control': 'no-store',
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(body),
   }, headers || {}));
@@ -49,7 +57,7 @@ function forbidden(res, message) {
 }
 
 function serverError(res, err) {
-  fail(res, 500, err && err.message ? err.message : '服务暂时不可用', 'SERVER_ERROR');
+  fail(res, 500, '服务暂时不可用', 'SERVER_ERROR');
 }
 
 function sendBuffer(res, buffer, contentType, extra) {
@@ -57,7 +65,7 @@ function sendBuffer(res, buffer, contentType, extra) {
   res.writeHead(200, Object.assign({
     'Content-Type': contentType,
     'Content-Length': buffer.length,
-    'Cache-Control': 'public, max-age=86400',
+    'Cache-Control': 'private, no-store',
   }, extra || {}));
   res.end(buffer);
 }
@@ -105,6 +113,7 @@ function sendHtml(res, html, status) {
   const buf = Buffer.from(html, 'utf8');
   setCors(res);
   res.writeHead(status || 200, {
+    'Cache-Control': 'no-store',
     'Content-Type': 'text/html; charset=utf-8',
     'Content-Length': buf.length,
   });
@@ -119,5 +128,5 @@ function handleOptions(res) {
 
 module.exports = {
   ok, fail, badRequest, unauthorized, notFound, forbidden, serverError,
-  sendJson, sendBuffer, serveFile, serveStatic, sendHtml, handleOptions, setCors,
+  sendJson, sendBuffer, serveFile, serveStatic, sendHtml, handleOptions, setCors, isOriginAllowed,
 };

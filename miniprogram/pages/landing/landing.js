@@ -1,13 +1,15 @@
 const request = require('../../utils/request');
 
-const CACHE_TTL = 5 * 60 * 1000;
+function safeDecode(value) {
+  try { return decodeURIComponent(String(value)); } catch (_) { return ''; }
+}
 
 function extractSlug(query) {
   if (!query) return '';
   if (query.slug) return String(query.slug);
-  if (query.scene) return decodeURIComponent(String(query.scene));
+  if (query.scene) return safeDecode(query.scene);
   if (query.q) {
-    const url = decodeURIComponent(String(query.q));
+    const url = safeDecode(query.q);
     if (/\/c\/([A-Za-z0-9_-]+)/.test(url)) {
       return /\/c\/([A-Za-z0-9_-]+)/.exec(url)[1];
     }
@@ -23,7 +25,7 @@ function extractScene(query) {
   if (query.source) return String(query.source);
   if (query.sceneRaw) return String(query.sceneRaw);
   if (query.q) {
-    const url = decodeURIComponent(String(query.q));
+    const url = safeDecode(query.q);
     if (/[?&](scene|source)=([A-Za-z0-9_.-]+)/.test(url)) {
       return /[?&](scene|source)=([A-Za-z0-9_.-]+)/.exec(url)[2];
     }
@@ -80,30 +82,18 @@ Page({
   },
 
   async loadPage(slug, source) {
-    const key = `gl_landing_${slug}`;
-    let cached = null;
-    try {
-      cached = wx.getStorageSync(key);
-    } catch (e) {
-      cached = null;
-    }
-    const fresh = cached && cached.data && (Date.now() - (cached.ts || 0)) < CACHE_TTL;
-    if (fresh) this.applyData(cached.data);
-
+    // A selected QR must be revalidated by the server on every load.
+    this.setData({ loading: true, channel: null, coverUrl: '' });
     try {
       const suffix = source ? `?source=${encodeURIComponent(source)}` : '';
       const data = await request.get(`/api/public/landing/${encodeURIComponent(slug)}${suffix}`, { noAuth: true });
-      try {
-        wx.setStorageSync(key, { ts: Date.now(), data });
-      } catch (e) {
-        /* 存储失败不影响使用 */
-      }
       this.applyData(data);
     } catch (err) {
-      if (fresh) return;
       const code = err && err.code ? err.code : 'ERROR';
       this.setData({
         loading: false,
+        channel: null,
+        coverUrl: '',
         status: code === 'CAMPAIGN_NOT_FOUND' ? 'notfound' : 'error',
         errorMsg: code === 'CAMPAIGN_NOT_FOUND' ? '这个入口已经失效了' : (err.message || '加载失败，请稍后再试'),
       });

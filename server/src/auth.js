@@ -17,9 +17,9 @@ function signToken(payload) {
 }
 
 function verifyToken(token) {
-  if (!token || typeof token !== 'string') return null;
+  if (!token || typeof token !== 'string' || token.length > 4096) return null;
   const parts = token.split('.');
-  if (parts.length !== 2) return null;
+  if (parts.length !== 2 || !/^[A-Za-z0-9_-]+$/.test(parts[0]) || !/^[A-Za-z0-9_-]{43}$/.test(parts[1])) return null;
   const expect = base64url(hmacSign(parts[0], config.tokenSecret));
   if (!safeEqual(parts[1], expect)) return null;
   let payload;
@@ -28,7 +28,7 @@ function verifyToken(token) {
   } catch (e) {
     return null;
   }
-  if (!payload || !payload.exp || payload.exp < nowSec()) return null;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload) || !Number.isSafeInteger(payload.exp) || payload.exp <= nowSec() || typeof payload.uid !== 'string' || !payload.uid || payload.uid.length > 128) return null;
   return payload;
 }
 

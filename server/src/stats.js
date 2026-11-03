@@ -20,8 +20,8 @@ function pct(part, total) {
 function buildTrend(campaignId, days, now) {
   const startDay = dayStr(now - (days - 1) * 86400);
   const rows = getDb().prepare(
-    'SELECT day, visits, uniques FROM daily_stats WHERE campaign_id = ? AND day >= ? ORDER BY day ASC'
-  ).all(campaignId, startDay);
+    'SELECT day, visits, uniques FROM daily_stats WHERE campaign_id = ? AND day >= ? AND day <= ? ORDER BY day ASC'
+  ).all(campaignId, startDay, dayStr(now));
 
   const map = new Map();
   for (const r of rows) map.set(r.day, r);
@@ -62,8 +62,8 @@ function buildStats(campaignId, rangeKey) {
   const startDay = range.days === 1 ? todayStr : dayStr(now - (range.days - 1) * 86400);
 
   const hourlyRaw = db.prepare(
-    'SELECT hour, COUNT(*) AS c FROM visits WHERE campaign_id = ? AND day >= ? GROUP BY hour'
-  ).all(campaignId, startDay);
+    'SELECT hour, COUNT(*) AS c FROM visits WHERE campaign_id = ? AND day >= ? AND day <= ? GROUP BY hour'
+  ).all(campaignId, startDay, dayStr(now));
   const hourly = [];
   for (let h = 0; h < 24; h++) hourly.push({ hour: h, visits: 0 });
   for (const r of hourlyRaw) {
@@ -71,8 +71,8 @@ function buildStats(campaignId, rangeKey) {
   }
 
   const sourceRaw = db.prepare(
-    'SELECT source, COUNT(*) AS c FROM visits WHERE campaign_id = ? AND day >= ? GROUP BY source ORDER BY c DESC LIMIT 50'
-  ).all(campaignId, startDay);
+    'SELECT source, COUNT(*) AS c FROM visits WHERE campaign_id = ? AND day >= ? AND day <= ? GROUP BY source ORDER BY c DESC LIMIT 50'
+  ).all(campaignId, startDay, dayStr(now));
   const sources = sourceRaw.map((r) => ({
     key: r.source || '',
     label: r.source || '直接扫码',
@@ -83,10 +83,10 @@ function buildStats(campaignId, rangeKey) {
   const chanRaw = db.prepare(`
     SELECT v.channel_id AS cid, COUNT(*) AS c
     FROM visits v
-    WHERE v.campaign_id = ? AND v.day >= ?
+    WHERE v.campaign_id = ? AND v.day >= ? AND v.day <= ?
     GROUP BY v.channel_id
     ORDER BY c DESC
-  `).all(campaignId, startDay);
+  `).all(campaignId, startDay, dayStr(now));
   const chanMap = new Map();
   for (const c of db.prepare('SELECT * FROM channels WHERE campaign_id = ?').all(campaignId)) {
     chanMap.set(c.id, c);
@@ -106,8 +106,8 @@ function buildStats(campaignId, rangeKey) {
   });
 
   const osRaw = db.prepare(
-    'SELECT os, COUNT(*) AS c FROM visits WHERE campaign_id = ? AND day >= ? GROUP BY os'
-  ).all(campaignId, startDay);
+    'SELECT os, COUNT(*) AS c FROM visits WHERE campaign_id = ? AND day >= ? AND day <= ? GROUP BY os'
+  ).all(campaignId, startDay, dayStr(now));
   const os = osRaw.map((r) => ({
     key: r.os,
     label: r.os === 'ios' ? 'iPhone' : (r.os === 'android' ? 'Android' : '其他'),
@@ -173,10 +173,10 @@ function todayCountMap(userId) {
   const day = dayStr(nowSec());
   const rows = db.prepare(`
     SELECT campaign_id AS id, COALESCE(SUM(visits), 0) AS today, COALESCE(SUM(uniques), 0) AS todayUnique
-    FROM daily_stats WHERE day = ? GROUP BY campaign_id
-  `).all(day);
+    FROM daily_stats WHERE day = ? AND campaign_id IN (SELECT id FROM campaigns WHERE owner_id = ? AND deleted = 0) GROUP BY campaign_id
+  `).all(day, userId);
   const map = new Map();
-  for (const r of rows) map.set(r.id, r);
+  for (const r of rows) map.set(r.id, { visits: r.today, uniques: r.todayUnique });
   return map;
 }
 

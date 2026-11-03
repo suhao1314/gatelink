@@ -39,10 +39,35 @@ const config = {
 
 config.devMode = config.wxAppId === '';
 
+function validateConfig(c) {
+  for (const key of ['tokenTTL', 'maxUploadBytes', 'maxImageBytes']) {
+    if (!Number.isSafeInteger(c[key]) || c[key] <= 0) throw new Error('Invalid configuration: ' + key);
+  }
+  if (!Number.isInteger(c.port) || c.port < 0 || c.port > 65535) throw new Error('Invalid configuration: port');
+  if (c.nodeEnv !== 'production') return;
+  for (const key of ['tokenSecret', 'visitorSalt']) {
+    if (typeof c[key] !== 'string' || c[key].length < 32 || c[key].includes('gatelink-')) {
+      throw new Error('Production requires a strong ' + key);
+    }
+  }
+  if (!c.wxAppId || !c.wxSecret) throw new Error('Production requires WeChat credentials');
+  let host;
+  try { host = new URL(c.publicHost); } catch (_) { throw new Error('Invalid PUBLIC_HOST'); }
+  if (host.protocol !== 'https:' || host.username || host.password || host.search || host.hash || host.pathname !== '/' || host.hostname === 'gate.example.com') {
+    throw new Error('Production requires a public HTTPS origin');
+  }
+  if (c.allowedOrigins === '*') throw new Error('Production requires explicit ALLOWED_ORIGINS');
+  const origins = c.allowedOrigins.split(',').map(s => s.trim());
+  if (!origins.length || origins.some(s => { try { const u = new URL(s); return u.protocol !== 'https:' || u.origin !== s; } catch (_) { return true; } })) {
+    throw new Error('Invalid ALLOWED_ORIGINS');
+  }
+}
+validateConfig(config);
+
 function ensureDirs() {
   for (const d of [config.dataDir, config.uploadDir, config.qrDir]) {
     if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
   }
 }
 
-module.exports = { config, ensureDirs, ROOT };
+module.exports = { config, ensureDirs, ROOT, validateConfig };

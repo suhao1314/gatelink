@@ -3,6 +3,8 @@ const request = require('../../utils/request');
 function decorate(stats) {
   if (!stats) return null;
   const s = JSON.parse(JSON.stringify(stats));
+  s.trend = Array.isArray(s.trend) ? s.trend : [];
+  s.sources = Array.isArray(s.sources) ? s.sources : [];
   const max = s.trend.reduce((m, t) => Math.max(m, t.visits), 0) || 1;
   s.trend.forEach((t) => { t.h = Math.max(3, Math.round((t.visits / max) * 100)); });
   s.sources.forEach((r) => { r.w = Math.max(2, Math.round(r.pct * 2.6)); });
@@ -24,7 +26,7 @@ Page({
 
   onLoad(query) {
     const token = query.token || query.scene || '';
-    if (!token) {
+    if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{16,128}$/.test(token)) {
       this.setData({ loading: false, error: '链接信息不完整' });
       return;
     }
@@ -66,7 +68,7 @@ Page({
   onShareAppMessage() {
     return {
       title: this.data.info ? `${this.data.info.campaign.name} 的扫码数据` : '扫码数据看板',
-      path: `/pages/share/share?token=${this.data.token}`,
+      path: `/pages/share/share?token=${encodeURIComponent(this.data.token)}`,
     };
   },
 });

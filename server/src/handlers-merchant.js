@@ -5,6 +5,7 @@ const { config } = require('./config');
 const http = require('./http');
 const auth = require('./auth');
 const qr = require('./qr');
+const { validShareToken } = require('./share-policy');
 const { staticUrl, STRATEGIES } = require('./landing');
 const { buildStats, todayCountMap, buildAlerts } = require('./stats');
 const { parseMultipart, saveImage, removeUpload } = require('./upload');
@@ -27,6 +28,13 @@ function ensureSlug() {
     if (!hit) return s;
   }
   return randomStr(12);
+}
+
+function removeUnreferencedUpload(name) {
+  if (!name) return;
+  const channel = db().prepare('SELECT 1 FROM channels WHERE image_path = ? LIMIT 1').get(name);
+  const cover = db().prepare('SELECT 1 FROM campaigns WHERE cover_path = ? AND deleted = 0 LIMIT 1').get(name);
+  if (!channel && !cover) removeUpload(name);
 }
 
 function loadCampaign(id) {
@@ -103,7 +111,7 @@ async function handleLogin(req, res) {
       expiresIn: config.tokenTTL,
     });
   } catch (e) {
-    http.badRequest(res, e.message, 'LOGIN_FAILED');
+    http.badRequest(res, 'Login failed; please try again', 'LOGIN_FAILED');
   }
 }
 
@@ -282,10 +290,12 @@ function handleDuplicateCampaign(req, res, params) {
       c.page_title, c.headline, c.subtitle, c.body_text, c.hint_text, c.theme_color, c.cover_path, now, now
     );
     for (const ch of loadChannels(c.id)) {
+      const clonedId = uid('ch');
       db().prepare(`
         INSERT INTO channels (id, campaign_id, name, image_path, sort_order, weight, quota, status, expires_at, created_at)
         VALUES (?,?,?,?,?,?,?,?,?,?)
-      `).run(uid('ch'), newId, ch.name, ch.image_path, ch.sort_order, ch.weight, ch.quota, ch.status, ch.expires_at, now);
+      `).run(clonedId, newId, ch.name, ch.image_path, ch.sort_order, ch.weight, ch.quota, ch.status, ch.expires_at, now);
+      if (ch.id === c.fallback_id) db().prepare('UPDATE campaigns SET fallback_id = ? WHERE id = ?').run(clonedId, newId);
     }
     db().exec('COMMIT');
   } catch (e) {
@@ -309,14 +319,14 @@ async function handleAddChannel(req, res, params) {
   try {
     parsed = await parseMultipart(req);
   } catch (e) {
-    return http.badRequest(res, e.message, (e.code || 'UPLOAD_FAILED'));
+    return http.badRequest(res, 'Upload failed; please check the image and retry', ['NO_FILE', 'TOO_LARGE', 'BAD_TYPE'].includes(e.code) ? e.code : 'UPLOAD_FAILED');
   }
   const file = parsed.files[0];
   let saved;
   try {
     saved = saveImage(file, config.maxImageBytes);
   } catch (e) {
-    return http.badRequest(res, e.message, e.code || 'UPLOAD_FAILED');
+    return http.badRequest(res, 'Upload failed; please check the image and retry', ['NO_FILE', 'TOO_LARGE', 'BAD_TYPE'].includes(e.code) ? e.code : 'UPLOAD_FAILED');
   }
 
   const kind = parsed.fields.kind === 'cover' ? 'cover' : 'code';
@@ -325,7 +335,7 @@ async function handleAddChannel(req, res, params) {
   if (kind === 'cover') {
     const old = c.cover_path;
     db().prepare('UPDATE campaigns SET cover_path = ?, updated_at = ? WHERE id = ?').run(saved.storedName, now, c.id);
-    if (old && old !== saved.storedName) removeUpload(old);
+    if (old && old !== saved.storedName) removeUnreferencedUpload(old);
     const fresh = loadCampaign(c.id);
     return http.ok(res, { kind: 'cover', campaign: campaignPublic(fresh, { channels: loadChannels(c.id).map(channelPublic), channelCount: loadChannels(c.id).length }) });
   }
@@ -361,19 +371,19 @@ async function handleReplaceChannelImage(req, res, params) {
   try {
     parsed = await parseMultipart(req);
   } catch (e) {
-    return http.badRequest(res, e.message, e.code || 'UPLOAD_FAILED');
+    return http.badRequest(res, 'Upload failed; please check the image and retry', ['NO_FILE', 'TOO_LARGE', 'BAD_TYPE'].includes(e.code) ? e.code : 'UPLOAD_FAILED');
   }
   let saved;
   try {
     saved = saveImage(parsed.files[0], config.maxImageBytes);
   } catch (e) {
-    return http.badRequest(res, e.message, e.code || 'UPLOAD_FAILED');
+    return http.badRequest(res, 'Upload failed; please check the image and retry', ['NO_FILE', 'TOO_LARGE', 'BAD_TYPE'].includes(e.code) ? e.code : 'UPLOAD_FAILED');
   }
 
   const old = ch.image_path;
   db().prepare('UPDATE channels SET image_path = ? WHERE id = ?').run(saved.storedName, ch.id);
   db().prepare('UPDATE campaigns SET updated_at = ? WHERE id = ?').run(nowSec(), c.id);
-  if (old) removeUpload(old);
+  if (old) removeUnreferencedUpload(old);
 
   const row = db().prepare('SELECT * FROM channels WHERE id = ?').get(ch.id);
   http.ok(res, { channel: channelPublic(row) });
@@ -437,7 +447,7 @@ function handleDeleteChannel(req, res, params) {
     try { db().exec('ROLLBACK'); } catch (e2) { /* noop */ }
     return http.serverError(res, e);
   }
-  removeUpload(ch.image_path);
+  removeUnreferencedUpload(ch.image_path);
   http.ok(res, { deleted: true });
 }
 
@@ -517,8 +527,10 @@ async function handleCreateShare(req, res, params) {
   } catch (e) {
     return http.badRequest(res, '请求格式不正确');
   }
-  const scope = body.scope === 'summary' ? 'summary' : 'full';
-  const ttl = toIntClamped(body.ttlDays, 0, 0, 3650);
+  if (body.scope !== undefined && !['summary', 'full'].includes(body.scope)) return http.badRequest(res, 'Invalid share scope');
+  const scope = body.scope === undefined ? 'full' : body.scope;
+  const ttl = body.ttlDays === undefined ? 0 : body.ttlDays;
+  if (typeof ttl !== 'number' || !Number.isInteger(ttl) || ttl < 0 || ttl > 3650) return http.badRequest(res, 'Invalid share expiry');
   const token = randomStr(20);
   const now = nowSec();
 
@@ -538,6 +550,7 @@ async function handleCreateShare(req, res, params) {
 function handleRevokeShare(req, res, params) {
   const user = auth.requireUser(req);
   if (!user) return http.unauthorized(res);
+  if (!validShareToken(params.token)) return http.notFound(res);
   const row = db().prepare('SELECT * FROM share_links WHERE token = ?').get(params.token);
   if (!row) return http.notFound(res, '分享链接不存在');
   const c = loadCampaign(row.campaign_id);

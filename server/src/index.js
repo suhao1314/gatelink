@@ -4,6 +4,8 @@ const httpServer = require('http');
 const { config, ensureDirs } = require('./config');
 const { getDb } = require('./db');
 const { dispatch } = require('./routes');
+const response = require('./http');
+const { safeLogTarget } = require('./util');
 
 ensureDirs();
 getDb();
@@ -20,14 +22,12 @@ const server = httpServer.createServer((req, res) => {
   res.on('finish', () => {
     const ms = Date.now() - t0;
     if (config.nodeEnv !== 'test') {
-      logLine('REQ', `${req.method} ${req.url} -> ${res.statusCode}`, `${ms}ms`);
+      logLine('REQ', `${req.method} ${safeLogTarget(req.url)} -> ${res.statusCode}`, `${ms}ms`);
     }
   });
 
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, {});
-    return res.end();
-  }
+  if (!response.isOriginAllowed(req.headers.origin)) return response.forbidden(res);
+  if (req.method === 'OPTIONS') return response.handleOptions(res);
 
   let u;
   try {
@@ -40,7 +40,7 @@ const server = httpServer.createServer((req, res) => {
   Promise.resolve()
     .then(() => dispatch(req, res, u))
     .catch((err) => {
-      logLine('ERR', `${req.method} ${req.url}`, err && err.message ? err.message : String(err));
+      logLine('ERR', `${req.method} ${safeLogTarget(req.url)}`, 'Request failed');
       if (!res.headersSent) {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ ok: false, error: { message: '服务暂时不可用', code: 'SERVER_ERROR' } }));
